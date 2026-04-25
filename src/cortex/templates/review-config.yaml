@@ -1,0 +1,20 @@
+# Per-domain review configuration.
+# Determines whether AI-authored decisions require human review.
+#
+# agent_review options:
+#   required - human must review every AI decision in this domain
+#   optional - auto-merge if validation passes
+#   skip     - no review needed
+#
+# Example:
+#   domains:
+#     auth:
+#       agent_review: required
+#       reviewer: senior-dev
+#     payments:
+#       agent_review: required
+#       reviewer: senior-dev
+#     utils:
+#       agent_review: skip
+
+domains: {}

@@ -1,0 +1,18 @@
+# Path-based decision triggering.
+# Changes to these paths require a decision record or [no-decision] classification.
+#
+# Format: domain → list of path patterns (glob syntax)
+#
+# Example:
+#   tracked_paths:
+#     auth:
+#       - "src/auth/**"
+#       - "src/middleware/auth*"
+#     payments:
+#       - "src/payments/**"
+#       - "src/billing/**"
+#     api:
+#       - "src/routes/**"
+#       - "src/controllers/**"
+
+tracked_paths: {}
