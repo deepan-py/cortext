@@ -6,7 +6,7 @@ You are reviewing a pull request that includes decision records.
 
 ## When This Skill Is Loaded
 
-- PR review that includes `context/timeline/*.yaml` changes
+- PR review that includes `.cortex/timeline/*.yaml` changes
 - Reviewing AI-authored decision records for accuracy
 - Checking whether a code change needs a decision record
 

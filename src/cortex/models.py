@@ -22,6 +22,11 @@ class Author(str, Enum):
     AI = "ai"
 
 
+class AIPlatform(str, Enum):
+    COPILOT = "copilot"
+    CLAUDE = "claude"
+
+
 class AlternativeRejected(BaseModel):
     """A rejected alternative considered during decision-making."""
 

@@ -220,3 +220,18 @@ def validate_timeline(
         )
 
     return result
+
+
+def load_all_records(timeline_dir: Path) -> dict[str, DecisionRecord]:
+    """Load all valid decision records from the timeline directory.
+
+    Returns a dict of id → DecisionRecord, skipping any that fail to parse.
+    """
+    records: dict[str, DecisionRecord] = {}
+    if not timeline_dir.exists():
+        return records
+    for path in sorted(timeline_dir.glob("*.yaml")):
+        record, _ = load_record(path)
+        if record:
+            records[record.id] = record
+    return records

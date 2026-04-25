@@ -26,13 +26,33 @@ pip install -e .
 cd your-project
 cortex init
 
+# Initialize with AI platform support (copilot, claude, or both)
+cortex init --ai copilot
+cortex init --ai copilot,claude
+
 # Create your first decision
 cortex new --domain auth
+
+# View decisions for a domain
+cortex show auth
+
+# Project status dashboard
+cortex status
+
+# Supersede an existing decision
+cortex supersede 2025-04-25-001
 
 # Validate all records
 cortex validate
 
-# Export JSON Schema (generated from pydantic models)
+# Install git pre-commit hook
+cortex hook install
+
+# Manage skills
+cortex skill list
+cortex skill add my-skill .cortex/skills/my-skill.md -d "Custom skill"
+
+# Export JSON Schema
 cortex schema
 ```
 
@@ -40,29 +60,70 @@ cortex schema
 
 ```
 your-project/
-└── context/
-    ├── timeline/           ← decision YAML files (source of truth)
-    ├── current/            ← generated domain views (later phases)
-    ├── skills/             ← loadable AI skill files
-    │   ├── _index.md       ← skill summary index
-    │   ├── reviewer.md     ← system skill: PR review
-    │   └── context-owner.md← system skill: drift triage
-    ├── agent-rules.md      ← how AI agents use this system
-    ├── review-config.yaml  ← per-domain review requirements
-    ├── drift-config.yaml   ← path-based decision triggering
-    └── drift-register.jsonl
+├── .cortex/
+│   ├── timeline/           ← decision YAML files (source of truth)
+│   ├── current/            ← generated domain views (later phases)
+│   ├── skills/             ← loadable AI skill files
+│   │   ├── _index.md       ← skill summary index
+│   │   ├── reviewer.md     ← system skill: PR review
+│   │   └── context-owner.md← system skill: drift triage
+│   ├── skills.json         ← machine-readable skill registry
+│   ├── agent-rules.md      ← how AI agents use this system
+│   ├── review-config.yaml  ← per-domain review requirements
+│   ├── drift-config.yaml   ← path-based decision triggering
+│   └── drift-register.jsonl
+│
+├── .github/
+│   └── copilot-instructions.md  ← (if --ai copilot)
+└── CLAUDE.md                    ← (if --ai claude)
 ```
+
+## AI Platform Support
+
+Cortex generates AI-specific instruction files so your AI assistant understands the context system:
+
+| Platform | Flag | Generated File |
+|---|---|---|
+| GitHub Copilot | `--ai copilot` | `.github/copilot-instructions.md` |
+| Claude | `--ai claude` | `CLAUDE.md` |
+
+Use `--ai copilot,claude` to generate files for multiple platforms at once.
 
 ## CLI Commands
 
 | Command | Description |
 |---|---|
-| `cortex init` | Scaffold `context/` directory in any project |
+| `cortex init [--ai <platforms>]` | Scaffold `.cortex/` directory, optionally with AI platform files |
 | `cortex new --domain <domain>` | Generate a skeleton decision YAML with auto-incremented date ID |
-| `cortex new --domain <domain> --parent <id>` | Create a child decision linked to a parent |
+| `cortex new --domain <d> --parent <id>` | Create a child decision linked to a parent |
+| `cortex show <domain>` | Show active decisions for a domain (`--all` includes superseded) |
+| `cortex status` | Dashboard: decision counts, domains, unreviewed AI decisions |
+| `cortex supersede <id>` | Mark a decision as superseded and create a child |
 | `cortex validate` | 3-pass validation: schema → cross-references → cycle detection |
-| `cortex schema` | Export JSON Schema to stdout (generated from pydantic models) |
+| `cortex hook install` | Install git pre-commit hook for automatic validation |
+| `cortex hook uninstall` | Remove the Cortex pre-commit hook |
+| `cortex skill add <name> <path>` | Register a skill in `skills.json` |
+| `cortex skill list` | List registered skills |
+| `cortex schema` | Export JSON Schema to stdout |
 | `cortex version` | Show version |
+
+## Skills Registry
+
+Skills are documented in `.cortex/skills/` and indexed in `.cortex/skills.json`:
+
+```json
+{
+  "skills": [
+    {
+      "name": "reviewer",
+      "path": ".cortex/skills/reviewer.md",
+      "description": "PR review criteria for decision records and context quality"
+    }
+  ]
+}
+```
+
+AI agents read `skills.json` to discover available skills and their file paths. Use `cortex skill add` to register new skills.
 
 ## Decision Record Format
 
@@ -99,12 +160,14 @@ tags: [jwt, security, auth]
 - **[PyYAML](https://pyyaml.org/)** — YAML parsing
 - **[Rich](https://rich.readthedocs.io/)** — terminal output formatting
 
-## v0.1 Status
+## v0.2 Status
 
-This is the minimal viable build. Current scope:
-- Folder scaffolding + templates + system skills
+Trial-ready build. Current scope:
+- `.cortex/` hidden directory structure + templates + system skills
 - Pydantic models with full schema validation
 - 3-pass validator (schema → cross-refs → cycles)
-- CLI: `init`, `new`, `validate`, `schema`, `version`
+- AI platform support: `--ai copilot`, `--ai claude`, `--ai copilot,claude`
+- Machine-readable `skills.json` registry with `cortex skill add/list`
+- CLI: `init`, `new`, `show`, `status`, `supersede`, `validate`, `hook install/uninstall`, `skill add/list`, `schema`, `version`
 
 See [DESIGN.md](DESIGN.md) for the full design record (problem space, architecture decisions, conflicts, implementation plan, and build phases).

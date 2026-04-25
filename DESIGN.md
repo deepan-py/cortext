@@ -2090,6 +2090,103 @@ Ordered by dependency. Each step is usable independently — you don't need step
 
 ---
 
+## v0.2 Implementation Changelog
+
+> Changes made to the design during trial implementation. The original design sections above are preserved as historical records.
+
+### Structural: `context/` → `.cortex/`
+
+The context directory was renamed from `context/` to `.cortex/` — following the hidden directory convention used by `.git`, `.vscode`, `.github`, etc. This keeps the project root clean and makes the system directory unambiguous.
+
+All references in templates, CLI, and generated files now use `.cortex/`.
+
+### AI Platform Integration: `--ai` flag on `cortex init`
+
+`cortex init` now accepts `--ai <platforms>` to generate AI-specific instruction files:
+
+| Platform | Flag | Generated File | Purpose |
+|---|---|---|---|
+| GitHub Copilot | `--ai copilot` | `.github/copilot-instructions.md` | Copilot workspace instructions |
+| Claude | `--ai claude` | `CLAUDE.md` | Claude project instructions |
+
+Multiple platforms supported: `--ai copilot,claude` generates both files. Files are idempotent — re-running init won't overwrite customized instruction files.
+
+### Machine-Readable Skill Registry: `skills.json`
+
+Added `.cortex/skills.json` as the canonical skill index (replaces the markdown `_index.md` as the machine-readable source of truth). Format:
+
+```json
+{
+  "skills": [
+    {
+      "name": "reviewer",
+      "path": ".cortex/skills/reviewer.md",
+      "description": "PR review criteria for decision records and context quality"
+    }
+  ]
+}
+```
+
+AI agents read this file to discover available skills. New CLI commands:
+- `cortex skill add <name> <path> [-d <description>]` — register a skill
+- `cortex skill list` — list all registered skills
+
+### New CLI Commands (v0.2)
+
+| Command | Purpose |
+|---|---|
+| `cortex show <domain> [--all]` | Show active (or all) decisions for a domain |
+| `cortex status` | Dashboard: total/active/superseded counts, domains, unreviewed AI decisions, drift entries |
+| `cortex supersede <id> [--domain <d>]` | Mark a decision as superseded + create a linked child |
+| `cortex hook install [--force]` | Install git pre-commit hook that validates staged decision records |
+| `cortex hook uninstall` | Remove the Cortex pre-commit hook |
+| `cortex skill add <name> <path>` | Register a skill in `skills.json` |
+| `cortex skill list` | List registered skills |
+
+### Pre-Commit Hook
+
+`cortex hook install` creates `.git/hooks/pre-commit` that:
+1. Detects staged `.cortex/timeline/*.yaml` files
+2. Runs `cortex validate` on them
+3. Blocks the commit if validation fails
+4. Supports `--no-verify` as the escape hatch (per design principle: public escape hatch over hard block)
+
+If a pre-commit hook already exists, cortex appends to it rather than overwriting.
+
+### Supersession Workflow
+
+`cortex supersede <id>` implements the decision evolution loop:
+1. Marks the target decision's status to `superseded`
+2. Creates a new child decision with `parents` pre-filled to the superseded ID
+3. Inherits the parent's domain (overridable with `--domain`)
+4. Refuses to supersede an already-superseded decision
+
+This closes the create → read → evolve → enforce loop needed for the trial.
+
+### Updated Folder Structure
+
+```
+your-project/
+├── .cortex/
+│   ├── timeline/              ← decision YAML files (source of truth)
+│   ├── current/               ← generated domain views (later phases)
+│   ├── skills/
+│   │   ├── _index.md          ← skill summary (human-readable)
+│   │   ├── reviewer.md        ← system skill: PR review
+│   │   └── context-owner.md   ← system skill: drift triage
+│   ├── skills.json            ← machine-readable skill registry
+│   ├── agent-rules.md         ← agent operating instructions
+│   ├── review-config.yaml     ← per-domain review requirements
+│   ├── drift-config.yaml      ← path-based decision triggering
+│   └── drift-register.jsonl   ← log of [no-decision] commits
+│
+├── .github/
+│   └── copilot-instructions.md  ← (if --ai copilot)
+└── CLAUDE.md                    ← (if --ai claude)
+```
+
+---
+
 ## Quick Reference
 
 ### File naming

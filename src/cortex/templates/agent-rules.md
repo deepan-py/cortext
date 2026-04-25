@@ -5,7 +5,7 @@ Agents operating on this project MUST follow these rules.
 ## Before Starting Work
 
 1. Read the current domain state: `cortex show <domain>` (when available)
-2. Or check existing decisions: `ls context/timeline/ | grep <domain>`
+2. Or check existing decisions: `ls .cortex/timeline/ | grep <domain>`
 
 ## When Making Changes
 
@@ -14,7 +14,7 @@ Agents operating on this project MUST follow these rules.
    - Fill ALL fields. You have no excuse for empty `assumptions`.
 4. Include the decision YAML in the same commit as the code change.
 5. Validate before committing: `cortex validate`
-6. Never edit generated files: `current/*.md`, `tensions/*.md`, `graph.json`, `context-graph.html`
+6. Never edit generated files: `.cortex/current/*.md`, `.cortex/tensions/*.md`, `.cortex/graph.json`, `.cortex/context-graph.html`
 7. Declare which skill you loaded (if any) so the human can verify or redirect.
 
 ## When to Write a Decision Record
